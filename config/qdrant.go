@@ -2,14 +2,19 @@ package config
 
 import (
 	"log"
+	"strings"
 
 	"github.com/qdrant/go-client/qdrant"
 )
 
-func NewQDrantConfig(uri, apiKey string) *qdrant.Client {
+func NewQDrantConfig(uri, apiKey string, port int) *qdrant.Client {
+	// Strip scheme if present
+	host := strings.TrimPrefix(uri, "https://")
+	host = strings.TrimPrefix(host, "http://")
+
 	client, err := qdrant.NewClient(&qdrant.Config{
-		Host:   uri,
-		Port:   6334,
+		Host:   host,
+		Port:   port,
 		APIKey: apiKey,
 		UseTLS: true,
 	})

@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -12,6 +13,7 @@ type Config struct {
 	JWTSecret     string
 	QDrantURI     string
 	QDrantAPIKey  string
+	QDrantPort    int
 }
 
 func LoadConfig() *Config {
@@ -27,6 +29,12 @@ func LoadConfig() *Config {
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	qDrantURI := os.Getenv("QDRANT_URI")
 	qDrantAPIKey := os.Getenv("QDRANT_API_KEY")
+	qDrantPort := os.Getenv("QDRANT_PORT")
+
+	qDrantPortInt, err := strconv.Atoi(qDrantPort)
+	if err != nil {
+		panic("Invalid QDRANT_PORT value")
+	}
 
 	return &Config{
 		RedisAddr:     redisAddr,
@@ -34,5 +42,6 @@ func LoadConfig() *Config {
 		JWTSecret:     jwtSecret,
 		QDrantURI:     qDrantURI,
 		QDrantAPIKey:  qDrantAPIKey,
+		QDrantPort:    qDrantPortInt,
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"senior-fullstack-2025/internal/service"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 type AuthHandler struct {
