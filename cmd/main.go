@@ -11,6 +11,7 @@ import (
 func main() {
 	cfg := config.LoadConfig()
 	redisClient := config.NewRedisConfig(cfg.RedisAddr, cfg.RedisPassword)
+	qDrantClient := config.NewQDrantConfig(cfg.QDrantURI, cfg.QDrantAPIKey)
 
 	authService := service.NewAuthService(redisClient, cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(authService)
