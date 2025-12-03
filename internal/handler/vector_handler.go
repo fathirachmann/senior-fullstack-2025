@@ -1,0 +1,111 @@
+package handler
+
+import (
+	"fmt"
+	"math/rand"
+	"senior-fullstack-2025/internal/service"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+type VectorHandler struct {
+	VectorService *service.VectorService
+}
+
+func NewVectorHandler(vectorService *service.VectorService) *VectorHandler {
+	return &VectorHandler{
+		VectorService: vectorService,
+	}
+}
+
+func (h *VectorHandler) InitData(c *fiber.Ctx) error {
+	collectionName := "articles"
+	vectorSize := uint64(4)
+
+	err := h.VectorService.CreateCollection(collectionName, vectorSize)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Failed to create collection: %v", err),
+		})
+	}
+
+	// 2. Insert 3 articles
+	articles := []struct {
+		ID     uint64
+		Vector []float32
+		Title  string
+	}{
+		{ID: 1, Vector: []float32{0.05, 0.61, 0.76, 0.74}, Title: "Article 1 - Golang Concurrency"},
+		{ID: 2, Vector: []float32{0.19, 0.81, 0.75, 0.11}, Title: "Article 2 - Vector Databases"},
+		{ID: 3, Vector: []float32{0.36, 0.55, 0.47, 0.94}, Title: "Article 3 - Building REST APIs"},
+	}
+
+	for _, article := range articles {
+		err := h.VectorService.UpsertArticle(collectionName, article.ID, article.Vector, article.Title)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to insert article %d: %v", article.ID, err),
+			})
+		}
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Collection created and data inserted successfully",
+	})
+}
+
+func (h *VectorHandler) Search(c *fiber.Ctx) error {
+	collectionName := "articles"
+	queryVector := []float32{0.1, 0.2, 0.3, 0.4}
+
+	title, err := h.VectorService.SearchArticle(collectionName, queryVector)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Search failed: %v", err),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"nearest_article_title": title,
+	})
+}
+
+func (h *VectorHandler) BulkInsert(c *fiber.Ctx) error {
+	collectionName := "articles_128"
+	vectorSize := uint64(128)
+
+	// Create collection for 128 dim vectors
+	err := h.VectorService.CreateCollection(collectionName, vectorSize)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Failed to create collection: %v", err),
+		})
+	}
+
+	// Generate 1000 embeddings
+	count := 1000
+	vectors := make([][]float32, count)
+	payloads := make([]map[string]interface{}, count)
+
+	for i := 0; i < count; i++ {
+		vec := make([]float32, vectorSize)
+		for j := range vec {
+			vec[j] = rand.Float32()
+		}
+		vectors[i] = vec
+		payloads[i] = map[string]interface{}{
+			"title": fmt.Sprintf("Bulk Article %d", i),
+		}
+	}
+
+	err = h.VectorService.BulkInsert(collectionName, vectors, payloads)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Bulk insert failed: %v", err),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": fmt.Sprintf("Successfully inserted %d vectors", count),
+	})
+}
