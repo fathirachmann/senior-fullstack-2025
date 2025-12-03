@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	RedisAddr string
-	JWTSecret string
+	RedisAddr     string
+	RedisPassword string
+	JWTSecret     string
 }
 
 func LoadConfig() *Config {
@@ -21,9 +22,11 @@ func LoadConfig() *Config {
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	redisAddr := os.Getenv("REDIS_ADDR")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
 
 	return &Config{
-		RedisAddr: redisAddr,
-		JWTSecret: jwtSecret,
+		RedisAddr:     redisAddr,
+		RedisPassword: redisPassword,
+		JWTSecret:     jwtSecret,
 	}
 }
